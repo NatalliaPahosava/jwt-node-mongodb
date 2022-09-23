@@ -29,7 +29,7 @@ app.post('/login', async (req, res) => {
   const userAllowed = await bcrypt.compare(req.body.password, user.password)
 
   if (userAllowed) {
-    const accessToken = jwt.sign(user, 'shhhhhh')
+    const accessToken = jwt.sign(user, process.env.PRIVATE_KEY)
     res.send({accessToken: accessToken})
     // if (accessToken) {
     //   const allUsers = await usersdb.find().toArray()
@@ -42,12 +42,12 @@ app.post('/login', async (req, res) => {
 
 app.get('/', async (req, res) => {
 const token = req.headers.authorization && req.headers.authorization.split(' ')[1]
-  jwt.verify(token, 'shhhhhh', async (err, decoded) => {
+  jwt.verify(token, process.env.PRIVATE_KEY, async (err, decoded) => {
     console.log(decoded)
     if (decoded) {
-    //   const allUsers = await usersdb.find().toArray()
-     res.send({ message: `Welcome ${decoded.email}` })
-    //   res.send(allUsers)
+      const allUsers = await usersdb.find().toArray()
+    //  res.send({ message: `Welcome ${decoded.email}` })
+      res.send(allUsers)
     } else if (err) {
       res.status(401).send({ error: 'You must use a valid token' })
     }
