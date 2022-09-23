@@ -18,59 +18,38 @@ app.use(express.json())
 
 app.listen(4040, () => console.log('Api running'))
 
-
-app.post('/signup', async(req,res)=>{
-    const newUser={email:'jane@gmail.com',password:'pass1234'}
-    const hashedPassword=await bcrypt.hash(newUser.password, 10)
-    await usersdb.insertOne({email:newUser.email, password:hashedPassword})
-    res.status(201).send('User was added')
+app.post('/signup', async (req, res) => {
+  const newUser = { email: 'jane@gmail.com', password: 'pass1234' }
+  const hashedPassword = await bcrypt.hash(newUser.password, 10)
+  await usersdb.insertOne({ email: newUser.email, password: hashedPassword })
+  res.status(201).send('User was added')
 })
-app.post('/login', async (req,res)=>{
-//find user
-const user = await usersdb.findOne({email: req.body.email})
-user.password
-const userAllowed=await bcrypt.compare(req.body.password, user.password)
-if(user){
- const allUsers=await usersdb.find().toArray()
-    res.status(200).send(allUsers)   
-}else {
+app.post('/login', async (req, res) => {
+  const user = await usersdb.findOne({ email: req.body.email })
+  const userAllowed = await bcrypt.compare(req.body.password, user.password)
+
+  if (userAllowed) {
+    const accessToken = jwt.sign(user, 'shhhhhh')
+    res.send({accessToken: accessToken})
+    // if (accessToken) {
+    //   const allUsers = await usersdb.find().toArray()
+    //   res.status(200).send(allUsers)
+    // }
+  } else {
     res.send('no user found')
-}
-//when allow to query
-
-    
+  }
 })
-// app.post('/signup', async (req, res) => {
-//   const newUser = { email: 'jane@gmail.com', password: 'pass1234' }
-//   const hashedPassword = await bcrypt.hash(newUser.password, 10)
 
-//   await usersdb.insertOne({ email: newUser.email, password: hashedPassword })
-
-//   res.status(201).send('User was added 😎')
-// })
-
-// app.post('/login', async (req, res) => {
-//   const user = await usersdb.findOne({ email: req.body.email })
-//   const userAllowed = await bcrypt.compare(req.body.password, user.password)
-
-//   if (userAllowed) {
-//     const accessToken = jwt.sign(user, process.env.PRIVATE_KEY)
-//     res.send({ accessToken: accessToken })
-//   } else {
-//     res.send('No user found or invalid password')
-//   }
-// })
-
-// app.get('/', async (req, res) => {
-//   const token = req.headers.authorization && req.headers.authorization.split(' ')[1]
-//   jwt.verify(token, process.env.PRIVATE_KEY, async (err, decoded) => {
-//     console.log(decoded)
-//     if (decoded) {
-//       const allUsers = await usersdb.find().toArray()
-//       // res.send({ message: `Welcome ${decoded.email}` })
-//       res.send(allUsers)
-//     } else if (err) {
-//       res.status(401).send({ error: 'You must use a valid token' })
-//     }
-//   })
-// })
+app.get('/', async (req, res) => {
+const token = req.headers.authorization && req.headers.authorization.split(' ')[1]
+  jwt.verify(token, 'shhhhhh', async (err, decoded) => {
+    console.log(decoded)
+    if (decoded) {
+    //   const allUsers = await usersdb.find().toArray()
+     res.send({ message: `Welcome ${decoded.email}` })
+    //   res.send(allUsers)
+    } else if (err) {
+      res.status(401).send({ error: 'You must use a valid token' })
+    }
+  })
+})
